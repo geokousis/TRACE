@@ -2,6 +2,8 @@
   <img src="trace.png" alt="TRACE Solver" width="534">
 </p>
 
+**TRACE: Thermodynamic Resolution of Ancestry and Continuous Evolution.**
+
 A vectorized Python/SciPy solver for **local ancestry inference from genotype
 likelihoods**, using reference allele frequencies plus a genetic-distance
 smoothing prior. It estimates a continuous per-SNP ancestry field `phi` along
