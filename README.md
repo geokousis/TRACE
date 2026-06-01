@@ -1,4 +1,6 @@
-# TRACE Solver
+<p align="center">
+  <img src="trace.png" alt="TRACE Solver" width="534">
+</p>
 
 A vectorized Python/SciPy solver for **local ancestry inference from genotype
 likelihoods**, using reference allele frequencies plus a genetic-distance
