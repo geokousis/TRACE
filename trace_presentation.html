@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRACE Solver Interactive Presentation</title>
+  <style>
+    :root {
+      --ink: #17201b;
+      --muted: #5f6f68;
+      --line: #d8e1dc;
+      --paper: #f7f9f6;
+      --panel: #ffffff;
+      --a: #2662a6;
+      --b: #b6454a;
+      --c: #2f8a63;
+      --gold: #b98526;
+      --deep: #12372d;
+      --soft: #e8f0ec;
+      --shadow: 0 18px 45px rgba(25, 36, 31, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(232,240,236,0.96), rgba(247,249,246,0.98)),
+        radial-gradient(circle at 10% 10%, rgba(38,98,166,0.18), transparent 32rem);
+    }
+
+    body { overflow: hidden; }
+
+    button, input { font: inherit; }
+
+    .deck {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.8rem clamp(1rem, 3vw, 2rem);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(16px);
+      z-index: 4;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.45rem;
+      background: conic-gradient(from 120deg, var(--a), var(--c), var(--gold), var(--b), var(--a));
+      box-shadow: inset 0 0 0 3px rgba(255,255,255,0.62);
+      flex: 0 0 auto;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 0.98rem;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .icon-btn {
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 0.45rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(25, 36, 31, 0.12);
+      background: #fbfcfb;
+    }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .progress {
+      width: min(26vw, 16rem);
+      height: 0.45rem;
+      background: #dfe8e3;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--a), var(--c));
+      transition: width 0.25s ease;
+    }
+
+    .slides {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      overflow: auto;
+      padding: clamp(1rem, 3vw, 2.5rem);
+      opacity: 0;
+      transform: translateX(2.5rem);
+      pointer-events: none;
+      transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      min-height: calc(100vh - 8.2rem);
+      display: grid;
+      align-content: center;
+      gap: 1.3rem;
+    }
+
+    .hero {
+      min-height: calc(100vh - 8.2rem);
+      align-content: center;
+      grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
+      align-items: center;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: clamp(2.35rem, 6vw, 5.6rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+      max-width: 12ch;
+    }
+
+    h2 {
+      font-size: clamp(1.7rem, 3.5vw, 3.3rem);
+      line-height: 1;
+      letter-spacing: 0;
+      max-width: 24ch;
+    }
+
+    h3 {
+      font-size: 1.04rem;
+      line-height: 1.2;
+    }
+
+    .lead {
+      font-size: clamp(1.02rem, 1.7vw, 1.32rem);
+      line-height: 1.55;
+      color: #33443d;
+      max-width: 62ch;
+    }
+
+    .eyebrow {
+      color: var(--c);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .col-4 { grid-column: span 4; }
+    .col-5 { grid-column: span 5; }
+    .col-6 { grid-column: span 6; }
+    .col-7 { grid-column: span 7; }
+    .col-8 { grid-column: span 8; }
+    .col-12 { grid-column: span 12; }
+
+    .card {
+      background: rgba(255,255,255,0.86);
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      box-shadow: var(--shadow);
+      padding: clamp(1rem, 2vw, 1.45rem);
+    }
+
+    .plain {
+      padding: clamp(0.25rem, 1vw, 0.75rem);
+    }
+
+    .stack { display: grid; gap: 1rem; }
+    .tight { gap: 0.55rem; }
+
+    .pillrow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: #244238;
+      border-radius: 999px;
+      padding: 0.42rem 0.7rem;
+      font-size: 0.82rem;
+      font-weight: 650;
+    }
+
+    .formula {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #13251f;
+      color: #f1fbf6;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      line-height: 1.65;
+      overflow-x: auto;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .muted { color: var(--muted); }
+
+    .mini {
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .callout {
+      border-left: 5px solid var(--c);
+      background: #eef7f2;
+      padding: 1rem;
+      border-radius: 0.4rem;
+      line-height: 1.45;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    .pipeline-map {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.9rem;
+      align-items: stretch;
+    }
+
+    .pipe-node {
+      position: relative;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #f3f7f4);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      min-height: 9.5rem;
+      display: grid;
+      gap: 0.45rem;
+      align-content: start;
+      box-shadow: 0 10px 25px rgba(25, 36, 31, 0.08);
+    }
+
+    .pipe-node::after {
+      content: "→";
+      position: absolute;
+      right: -0.78rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--deep);
+      color: white;
+      font-weight: 800;
+      z-index: 2;
+    }
+
+    .pipe-node:nth-child(4n)::after,
+    .pipe-node:last-child::after { display: none; }
+
+    .node-tag {
+      width: fit-content;
+      color: white;
+      background: var(--deep);
+      border-radius: 999px;
+      padding: 0.22rem 0.52rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .versus {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--deep);
+      color: white;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+    .micro-list {
+      display: grid;
+      gap: 0.55rem;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .micro-list li {
+      display: grid;
+      grid-template-columns: 1.8rem 1fr;
+      gap: 0.55rem;
+      align-items: start;
+      color: var(--muted);
+      line-height: 1.4;
+      font-size: 0.9rem;
+    }
+
+    .micro-list span {
+      display: grid;
+      place-items: center;
+      width: 1.55rem;
+      height: 1.55rem;
+      border-radius: 0.35rem;
+      background: #e0eee7;
+      color: var(--deep);
+      font-weight: 850;
+      font-size: 0.75rem;
+    }
+
+    .equation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+
+    .equation-tile {
+      border: 1px solid var(--line);
+      border-radius: 0.45rem;
+      background: #fbfcfb;
+      padding: 0.85rem;
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 0.5rem;
+      padding: 0.9rem;
+      min-height: 9rem;
+      display: grid;
+      gap: 0.45rem;
+      align-content: start;
+    }
+
+    .step b {
+      width: 1.9rem;
+      height: 1.9rem;
+      display: grid;
+      place-items: center;
+      border-radius: 0.35rem;
+      color: white;
+      background: var(--deep);
+      font-size: 0.85rem;
+    }
+
+    .viz {
+      min-height: 23rem;
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.88), rgba(232,240,236,0.92));
+    }
+
+    .chromosome {
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      top: 17%;
+      height: 4.5rem;
+      border-radius: 3rem;
+      border: 1px solid rgba(23,32,27,0.12);
+      overflow: hidden;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.6);
+      display: flex;
+    }
+
+    .seg-a { background: linear-gradient(90deg, #1f5f9f, #3b7dc4); }
+    .seg-b { background: linear-gradient(90deg, #c45559, #9c303d); }
+    .seg-m { background: linear-gradient(90deg, #2e8a64, #56aa7a); }
+
+    .snp {
+      position: absolute;
+      width: 2px;
+      height: 8rem;
+      top: 11%;
+      background: rgba(19,37,31,0.2);
+    }
+
+    .trajectory {
+      position: absolute;
+      left: 7%;
+      right: 7%;
+      bottom: 16%;
+      height: 11rem;
+    }
+
+    .axis {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 2rem;
+      height: 1px;
+      background: rgba(23,32,27,0.24);
+    }
+
+    .curve {
+      position: absolute;
+      inset: 0;
+    }
+
+    .legend {
+      position: absolute;
+      left: 7%;
+      bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .swatch {
+      display: inline-block;
+      width: 0.8rem;
+      height: 0.8rem;
+      border-radius: 0.2rem;
+      margin-right: 0.35rem;
+      vertical-align: -0.1rem;
+    }
+
+    .metric-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      overflow: hidden;
+      border-radius: 0.45rem;
+    }
+
+    .metric-table th, .metric-table td {
+      padding: 0.62rem 0.65rem;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .metric-table th {
+      color: #385046;
+      background: #edf4f0;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .score {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 4.2rem;
+      padding: 0.22rem 0.45rem;
+      border-radius: 999px;
+      font-weight: 750;
+      font-size: 0.8rem;
+    }
+
+    .good { color: #0f5132; background: #d9f2e5; }
+    .mid { color: #6d4c05; background: #fff1c7; }
+    .bad { color: #842029; background: #f8d7da; }
+
+    .tabs {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 0.4rem;
+      padding: 0.48rem 0.7rem;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: var(--deep);
+      color: white;
+      border-color: var(--deep);
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 5rem 1fr 4rem;
+      gap: 0.7rem;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--c);
+    }
+
+    .mini-chart {
+      width: 100%;
+      min-height: 17rem;
+      border: 1px solid var(--line);
+      border-radius: 0.5rem;
+      background: #fbfcfb;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.7rem 1rem;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(16px);
+    }
+
+    .dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      border: 0;
+      background: #bac9c1;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .dot.active {
+      width: 1.5rem;
+      border-radius: 999px;
+      background: var(--deep);
+    }
+
+    .kbd {
+      display: inline-grid;
+      place-items: center;
+      min-width: 1.5rem;
+      height: 1.4rem;
+      padding: 0 0.35rem;
+      border: 1px solid #cbd6d0;
+      border-bottom-width: 2px;
+      border-radius: 0.25rem;
+      background: white;
+      color: #405149;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .two-line {
+      display: grid;
+      gap: 0.18rem;
+    }
+
+    .code-ref {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.82rem;
+      color: #183d32;
+      background: #e7f1ec;
+      padding: 0.12rem 0.35rem;
+      border-radius: 0.25rem;
+    }
+
+    @media (max-width: 860px) {
+      body { overflow: auto; }
+      .deck { min-height: auto; }
+      .slides { min-height: calc(100vh - 7rem); }
+      .slide { position: relative; display: none; min-height: calc(100vh - 7rem); }
+      .slide.active { display: block; }
+      .inner, .hero { min-height: auto; }
+      .hero, .grid { grid-template-columns: 1fr; }
+      .col-4, .col-5, .col-6, .col-7, .col-8, .col-12 { grid-column: span 1; }
+      .flow { grid-template-columns: 1fr; }
+      .pipeline-map { grid-template-columns: 1fr; }
+      .pipe-node::after { display: none; }
+      .compare { grid-template-columns: 1fr; }
+      .versus { justify-self: center; }
+      .equation-grid { grid-template-columns: 1fr; }
+      .progress-wrap { display: none; }
+      .brand span { display: none; }
+      .viz { min-height: 20rem; }
+      .metric-table { font-size: 0.78rem; }
+      .metric-table th, .metric-table td { padding: 0.5rem 0.45rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <strong>TRACE Solver</strong>
+          <span>Thermodynamic Resolution of Ancestry and Continuous Evolution</span>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="progress-wrap">
+          <span id="count">1 / 12</span>
+          <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+        </div>
+        <button class="icon-btn" id="prev" title="Previous slide" aria-label="Previous slide">‹</button>
+        <button class="icon-btn" id="next" title="Next slide" aria-label="Next slide">›</button>
+      </div>
+    </header>
+
+    <main class="slides" id="slides">
+      <section class="slide active">
+        <div class="inner hero grid">
+          <div class="stack">
+            <p class="eyebrow">Local ancestry as a continuous field</p>
+            <h1>TRACE Solver</h1>
+            <p class="lead">A variational model that turns genotype likelihoods, reference-panel allele frequencies, and genetic-map distance into a smooth ancestry trajectory along the genome.</p>
+            <div class="pillrow">
+              <span class="pill">Euler-Lagrange inspired</span>
+              <span class="pill">SciPy L-BFGS-B</span>
+              <span class="pill">VCF / BAM / Zarr</span>
+              <span class="pill">Diploid and haploid aware</span>
+            </div>
+          </div>
+          <div class="card viz" aria-label="Chromosome ancestry illustration">
+            <div class="chromosome">
+              <div class="seg-a" style="width:31%"></div>
+              <div class="seg-b" style="width:26%"></div>
+              <div class="seg-m" style="width:16%"></div>
+              <div class="seg-b" style="width:27%"></div>
+            </div>
+            <div class="snp" style="left:13%"></div>
+            <div class="snp" style="left:22%"></div>
+            <div class="snp" style="left:38%"></div>
+            <div class="snp" style="left:57%"></div>
+            <div class="snp" style="left:72%"></div>
+            <div class="snp" style="left:84%"></div>
+            <div class="trajectory">
+              <div class="axis"></div>
+              <svg class="curve" viewBox="0 0 720 170" preserveAspectRatio="none">
+                <path d="M0 38 C80 38 130 38 190 42 C245 48 265 115 322 124 C392 135 406 74 462 58 C535 37 592 118 720 124" fill="none" stroke="#12372d" stroke-width="8" stroke-linecap="round"/>
+                <path d="M0 38 C80 38 130 38 190 42 C245 48 265 115 322 124 C392 135 406 74 462 58 C535 37 592 118 720 124" fill="none" stroke="#f7f9f6" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="legend">
+              <span><i class="swatch" style="background:var(--a)"></i>Population A</span>
+              <span><i class="swatch" style="background:var(--b)"></i>Population B</span>
+              <span><i class="swatch" style="background:var(--c)"></i>intermediate / K-state</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">The biological question</p>
+          <h2>Where did each stretch of genome come from?</h2>
+          <div class="grid">
+            <div class="card col-4 stack tight">
+              <h3>Observed sample</h3>
+              <p class="mini">At each SNP we have genotype evidence: GL, PL, GT, or pileup-derived likelihoods.</p>
+            </div>
+            <div class="card col-4 stack tight">
+              <h3>Reference panels</h3>
+              <p class="mini">Each ancestry source provides allele frequencies. Counts are Beta-smoothed to avoid impossible zero/one frequencies.</p>
+            </div>
+            <div class="card col-4 stack tight">
+              <h3>Genetic map</h3>
+              <p class="mini">Physical distance is not enough. TRACE uses cM distance so recombination scale controls how quickly ancestry can change.</p>
+            </div>
+          </div>
+          <div class="callout">TRACE treats ancestry as a path, not independent SNP labels. Neighboring loci should usually agree unless genotype evidence and recombination distance justify a transition.</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Big-picture pipeline</p>
+          <h2>TRACE converts raw genetic evidence into an ancestry painting.</h2>
+          <div class="pipeline-map">
+            <div class="pipe-node">
+              <span class="node-tag">input</span>
+              <h3>Sample evidence</h3>
+              <p class="mini">VCF genotype likelihoods, phased GT calls, or BAM/CRAM pileups at known SNPs.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">reference</span>
+              <h3>Population baths</h3>
+              <p class="mini">Reference-panel frequencies say what alleles are expected under each ancestry source.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">map</span>
+              <h3>Genetic distance</h3>
+              <p class="mini">cM positions describe how much recombination opportunity separates adjacent markers.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">model</span>
+              <h3>Variational path</h3>
+              <p class="mini">Find the smooth ancestry trajectory that best explains local genotype evidence.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">solve</span>
+              <h3>Optimize action</h3>
+              <p class="mini">Analytical gradients guide L-BFGS-B downhill without finite-difference guessing.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">stitch</span>
+              <h3>Chunk integration</h3>
+              <p class="mini">Overlapping windows are blended only where positions truly overlap; large map gaps split segments.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">output</span>
+              <h3>Readable products</h3>
+              <p class="mini">TSV, Zarr, BED, MSP, global ancestry summary, and HTML chromosome painting report.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">validate</span>
+              <h3>Benchmark truth</h3>
+              <p class="mini">Simulated truth sets score MSE, MAE, hard-call accuracy, cM-weighted error, and correlation.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Biological analogy</p>
+          <h2>The genome is a mosaic, but the tiles are not independent.</h2>
+          <div class="compare">
+            <div class="card stack">
+              <h3>Naive SNP-by-SNP calling</h3>
+              <ul class="micro-list">
+                <li><span>1</span><p>Each SNP is assigned ancestry independently.</p></li>
+                <li><span>2</span><p>Noise can produce unrealistic ancestry flickering.</p></li>
+                <li><span>3</span><p>Recombination distance and LD structure are mostly ignored.</p></li>
+              </ul>
+            </div>
+            <div class="versus">vs</div>
+            <div class="card stack">
+              <h3>TRACE path inference</h3>
+              <ul class="micro-list">
+                <li><span>1</span><p>Each SNP contributes likelihood evidence.</p></li>
+                <li><span>2</span><p>Neighboring SNPs communicate through a smoothness penalty.</p></li>
+                <li><span>3</span><p>Breakpoints are allowed when evidence overcomes recombination resistance.</p></li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">Biologically, TRACE asks: “What ancestry path could have generated these genotypes with a plausible number and placement of recombination transitions?”</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">The objective</p>
+          <h2>Energy balances smoothness against fit to genotype evidence.</h2>
+          <div class="grid">
+            <div class="col-7 card stack">
+              <div class="formula">S(phi) =
+  D * sum_i pseudoHuber(phi[i+1] - phi[i]) / d_cM[i]
+  - tau * sum_i log P(GL_i | phi_i, f_ref_i)
+  + optional priors</div>
+              <p class="mini">The code uses a pseudo-Huber kinetic penalty. It behaves like a quadratic for tiny changes but is less punitive for real ancestry jumps.</p>
+            </div>
+            <div class="col-5 stack">
+              <div class="card stack tight">
+                <h3>Kinetic term</h3>
+                <p class="mini">Penalizes rapid ancestry changes. Higher D means smoother ancestry tracts.</p>
+              </div>
+              <div class="card stack tight">
+                <h3>Potential term</h3>
+                <p class="mini">Rewards ancestry values that make the observed genotype likelihood plausible.</p>
+              </div>
+              <div class="card stack tight">
+                <h3>Genetic distance</h3>
+                <p class="mini">Transitions across large cM gaps are easier than transitions across tight LD regions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Small-picture mechanics</p>
+          <h2>At one SNP, TRACE asks how compatible each ancestry mix is with the observed genotype.</h2>
+          <div class="equation-grid">
+            <div class="equation-tile">
+              <h3>Expected allele frequency</h3>
+              <div class="formula">p_i = phi_i f_Ai + (1 - phi_i) f_Bi</div>
+              <p class="mini">If phi is near A, p follows A. If phi is near B, p follows B. Intermediate phi gives a mixture.</p>
+            </div>
+            <div class="equation-tile">
+              <h3>Diploid genotype probabilities</h3>
+              <div class="formula">P(0/0)=(1-p)^2
+P(0/1)=2p(1-p)
+P(1/1)=p^2</div>
+              <p class="mini">This is the Hardy-Weinberg diploid prior implied by local ancestry.</p>
+            </div>
+            <div class="equation-tile">
+              <h3>Observed evidence</h3>
+              <div class="formula">L_i = GL_0 P(0/0) + GL_1 P(0/1) + GL_2 P(1/1)</div>
+              <p class="mini">GLs let low-quality data remain uncertain instead of forcing hard genotype calls.</p>
+            </div>
+            <div class="equation-tile">
+              <h3>Potential energy</h3>
+              <div class="formula">V_i = -tau * log(L_i)</div>
+              <p class="mini">Bad ancestry explanations cost more energy; tau controls how strongly we trust the GLs.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Neighbor mechanics</p>
+          <h2>Between two SNPs, TRACE asks how expensive an ancestry change should be.</h2>
+          <div class="grid">
+            <div class="card col-6 stack">
+              <h3>Recombination-aware smoothing</h3>
+              <div class="formula">K_i = D * pseudoHuber(phi[i+1] - phi[i]) / d_cM[i]</div>
+              <p class="mini">Small genetic distances make switches expensive. Large genetic gaps make switches easier or split the problem entirely.</p>
+            </div>
+            <div class="card col-6 stack">
+              <h3>Why pseudo-Huber?</h3>
+              <p class="mini">A pure quadratic can over-penalize real breakpoints. Pseudo-Huber keeps tiny fluctuations smooth but allows sharper biological transitions.</p>
+              <div class="pillrow">
+                <span class="pill">smooth for noise</span>
+                <span class="pill">forgiving for breakpoints</span>
+                <span class="pill">differentiable</span>
+              </div>
+            </div>
+          </div>
+          <div class="callout">The final path is the compromise: explain the genotypes without inventing too many recombination events.</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Likelihood model</p>
+          <h2>Diploid genotype likelihoods make the evidence biologically meaningful.</h2>
+          <div class="grid">
+            <div class="card col-6 stack">
+              <h3>Binary ancestry</h3>
+              <div class="formula">p_i = phi_i f_Ai + (1 - phi_i) f_Bi
+P(G=0) = (1-p)^2
+P(G=1) = 2p(1-p)
+P(G=2) = p^2</div>
+              <p class="mini">TRACE compares those genotype priors to sequencing likelihoods, not just hard calls.</p>
+            </div>
+            <div class="card col-6 stack">
+              <h3>K populations</h3>
+              <div class="formula">phi_i = softmax(theta_i)
+p_i = sum_k phi_ik f_ik</div>
+              <p class="mini">The K-state solver uses K-1 logits plus a baseline column, keeping ancestry fractions on the simplex.</p>
+            </div>
+          </div>
+          <div class="pillrow">
+            <span class="pill">diploid</span>
+            <span class="pill">haploid sex chromosomes</span>
+            <span class="pill">GL / PL / GT fallback</span>
+            <span class="pill">ancient DNA compatible inputs</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Data preparation</p>
+          <h2>Most biological errors happen before optimization.</h2>
+          <div class="pipeline-map">
+            <div class="pipe-node">
+              <span class="node-tag">panel QC</span>
+              <h3>Smooth frequencies</h3>
+              <p class="mini">Count-format panels use Beta smoothing. This avoids impossible likelihoods when a finite reference panel has frequency 0 or 1.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">alleles</span>
+              <h3>Harmonize REF/ALT</h3>
+              <p class="mini">TRACE matches by position and alleles, handles reverse complements, and avoids unsafe palindromic strand flips.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">ploidy</span>
+              <h3>Set chromosome mode</h3>
+              <p class="mini">Male X/Y/MT and user-provided haploid contigs use haploid likelihoods instead of diploid HWE priors.</p>
+            </div>
+            <div class="pipe-node">
+              <span class="node-tag">map</span>
+              <h3>Interpolate cM</h3>
+              <p class="mini">Genetic maps convert base-pair positions into recombination scale, with extrapolation at edges.</p>
+            </div>
+          </div>
+          <div class="callout">If reference alleles are wrong, strand handling is wrong, or ploidy is wrong, the optimizer can be mathematically correct and biologically wrong.</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Chunking and scale</p>
+          <h2>Million-SNP inference is handled as overlapping local problems.</h2>
+          <div class="grid">
+            <div class="card col-4 stack tight">
+              <h3>Why chunk?</h3>
+              <p class="mini">L-BFGS-B is memory efficient, but huge chromosomes still need bounded working sets and parallel execution.</p>
+            </div>
+            <div class="card col-4 stack tight">
+              <h3>Why overlap?</h3>
+              <p class="mini">Optimizer edges have less neighbor context. Overlap lets TRACE blend central, better-conditioned estimates.</p>
+            </div>
+            <div class="card col-4 stack tight">
+              <h3>Why split map gaps?</h3>
+              <p class="mini">Centromeres and sparse regions should not force ancestry continuity across uninformative distance.</p>
+            </div>
+          </div>
+          <div class="formula">chromosome → cM segments → overlapping chunks → optimize → blend true overlaps → final path</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Solver implementation</p>
+          <h2>Why the Python code is not slow Python.</h2>
+          <div class="flow">
+            <div class="step"><b>1</b><h3>Read evidence</h3><p class="mini">VCF, BAM/CRAM, or simulation fixture.</p></div>
+            <div class="step"><b>2</b><h3>Harmonize</h3><p class="mini">Match SNPs to reference panel, handle strand flips, skip ambiguous mismatches.</p></div>
+            <div class="step"><b>3</b><h3>Chunk</h3><p class="mini">Split by chromosome, map gaps, and memory-friendly windows.</p></div>
+            <div class="step"><b>4</b><h3>Optimize</h3><p class="mini">L-BFGS-B with analytical gradient.</p></div>
+            <div class="step"><b>5</b><h3>Stitch</h3><p class="mini">Blend true overlaps and write TSV, Zarr, BED, MSP, report.</p></div>
+          </div>
+          <div class="grid">
+            <div class="card col-6">
+              <h3>Important code anchors</h3>
+              <p class="mini"><span class="code-ref">TraceSolver</span> handles K=2 bounded phi. <span class="code-ref">TraceMultidimensionalSolver</span> handles K-state softmax. <span class="code-ref">solve_inference_chunk</span> dispatches the right solver.</p>
+            </div>
+            <div class="card col-6">
+              <h3>Complexity</h3>
+              <p class="mini">Objective and gradient are O(N) per optimizer evaluation. L-BFGS-B avoids materializing a full N by N Hessian.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Optimization loop</p>
+          <h2>Each L-BFGS-B iteration asks two vectorized questions.</h2>
+          <div class="grid">
+            <div class="card col-6 stack">
+              <h3>1. What is the current action?</h3>
+              <ul class="micro-list">
+                <li><span>A</span><p>Compute ancestry-implied allele frequency at every SNP.</p></li>
+                <li><span>B</span><p>Compute genotype likelihood under local ancestry.</p></li>
+                <li><span>C</span><p>Add pseudo-Huber smoothness across adjacent SNPs.</p></li>
+              </ul>
+            </div>
+            <div class="card col-6 stack">
+              <h3>2. Which direction reduces it?</h3>
+              <ul class="micro-list">
+                <li><span>A</span><p>Potential gradient says how genotype evidence pulls phi.</p></li>
+                <li><span>B</span><p>Kinetic gradient says how neighbors pull phi back.</p></li>
+                <li><span>C</span><p>Analytical Jacobian avoids slow numerical gradients.</p></li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">The optimizer is generic; the biological intelligence is in the objective and gradient.</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Outputs</p>
+          <h2>TRACE outputs are meant for both inspection and downstream tools.</h2>
+          <div class="grid">
+            <div class="card col-4 stack tight"><h3>TSV</h3><p class="mini">Per-SNP ancestry fractions. Binary mode also includes local stderr from the tridiagonal inverse Hessian.</p></div>
+            <div class="card col-4 stack tight"><h3>Zarr</h3><p class="mini">Compact on-disk arrays for large chromosome painting and report generation.</p></div>
+            <div class="card col-4 stack tight"><h3>BED / MSP</h3><p class="mini">Hard-call ancestry segments for genome browser workflows and RFMix-style comparisons.</p></div>
+            <div class="card col-6 stack tight"><h3>Summary</h3><p class="mini">cM-weighted global ancestry and exploratory ACF timing diagnostics.</p></div>
+            <div class="card col-6 stack tight"><h3>HTML report</h3><p class="mini">Stacked chromosome painting and ternary K=3 trajectory plots for visual QC.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Interactive intuition</p>
+          <h2>D and tau change the shape of the ancestry path.</h2>
+          <div class="grid">
+            <div class="card col-5 stack">
+              <div class="slider-row"><strong>D</strong><input id="dSlider" type="range" min="0" max="100" value="52"><span id="dVal">0.003</span></div>
+              <div class="slider-row"><strong>tau</strong><input id="tauSlider" type="range" min="0" max="100" value="55"><span id="tauVal">1.0</span></div>
+              <p class="mini">Higher D smooths transitions. Higher tau trusts genotype likelihoods more strongly. Ancient DNA often wants lower tau and stronger smoothing; recent tracts often tolerate sharper evidence.</p>
+              <div class="callout" id="demoText">Balanced mode: useful as a default tract-like local ancestry setting.</div>
+            </div>
+            <div class="card col-7">
+              <svg id="demoChart" class="mini-chart" viewBox="0 0 760 320" preserveAspectRatio="none" aria-label="Interactive ancestry path chart"></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Current benchmark picture</p>
+          <h2>TRACE is strongest on tract-like ancestry.</h2>
+          <div class="card">
+            <table class="metric-table">
+              <thead><tr><th>Scenario</th><th>10k cm-MSE</th><th>Hard call</th><th>Pearson</th><th>Interpretation</th></tr></thead>
+              <tbody>
+                <tr><td>centromere_abyss</td><td>0.067</td><td><span class="score good">90.3%</span></td><td>0.820</td><td>Good gap handling</td></tr>
+                <tr><td>ancient_mosaic</td><td>0.079</td><td><span class="score good">90.3%</span></td><td>0.823</td><td>Good short-tract recovery</td></tr>
+                <tr><td>f1_hybrid</td><td>0.110</td><td><span class="score good">90.4%</span></td><td>0.814</td><td>Good, but D/tau matter</td></tr>
+                <tr><td>bottleneck_drift</td><td>0.125</td><td><span class="score mid">76.9%</span></td><td>n/a</td><td>False ancestry under drift</td></tr>
+                <tr><td>isolation_by_distance</td><td>0.137</td><td><span class="score mid">51.9%</span></td><td>0.057</td><td>Needs clinal prior</td></tr>
+                <tr><td>ghost_introgression</td><td>0.209</td><td><span class="score bad">55.6%</span></td><td>0.266</td><td>Needs ghost/unknown state</td></tr>
+                <tr><td>ancient_dna</td><td>0.240</td><td><span class="score mid">81.8%</span></td><td>0.507</td><td>Needs damage/error model</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mini">These are current medium-run summaries from 10,000 SNPs and 3 replicates. Treat them as development benchmarks, not final publication claims.</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Scenario biology</p>
+          <h2>Benchmarks are not just scores; each one tests a biological assumption.</h2>
+          <div class="grid">
+            <div class="card col-6 stack tight">
+              <h3>Tract-like admixture</h3>
+              <p class="mini"><b>f1_hybrid, ancient_mosaic, centromere_abyss.</b> These ask whether TRACE can recover discrete ancestry blocks generated by recombination. This is the model's natural regime.</p>
+            </div>
+            <div class="card col-6 stack tight">
+              <h3>Reference mismatch</h3>
+              <p class="mini"><b>bottleneck_drift, ghost_introgression.</b> These test whether TRACE invents ancestry when the panel is distorted or missing the true source.</p>
+            </div>
+            <div class="card col-6 stack tight">
+              <h3>Continuous ancestry</h3>
+              <p class="mini"><b>isolation_by_distance.</b> This is not a tract problem. It tests whether the model can represent stable intermediate ancestry without snapping to A/B.</p>
+            </div>
+            <div class="card col-6 stack tight">
+              <h3>Data degradation</h3>
+              <p class="mini"><b>ancient_dna.</b> This tests whether the path can remain stable when genotype likelihoods are low coverage and noisy.</p>
+            </div>
+          </div>
+          <div class="callout">A good local ancestry method should not only be accurate when its assumptions hold; it should fail visibly when its assumptions are violated.</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Failure modes</p>
+          <h2>Each weak scenario tells us what the model is missing.</h2>
+          <div class="grid">
+            <div class="card col-4 stack tight">
+              <h3>Ghost introgression</h3>
+              <p class="mini">A/B-only reference panels cannot represent unsampled ancestry. Add an unknown state with a prior penalty.</p>
+            </div>
+            <div class="card col-4 stack tight">
+              <h3>Isolation by distance</h3>
+              <p class="mini">Truth is clinal and near-intermediate. Add an interior/global ancestry prior to avoid over-polarization.</p>
+            </div>
+            <div class="card col-4 stack tight">
+              <h3>Ancient DNA</h3>
+              <p class="mini">Low coverage and damage distort GLs. Add deamination-aware likelihoods and tune tau.</p>
+            </div>
+          </div>
+          <div class="formula">Recommended next model:
+S = kinetic(D_i) + tau * GL_potential + lambda_unknown * phi_unknown
+    + lambda_cline * KL(phi || global_ancestry)</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Uncertainty</p>
+          <h2>TRACE now reports local K=2 uncertainty, but calibration still matters.</h2>
+          <div class="grid">
+            <div class="card col-6 stack">
+              <h3>What changed</h3>
+              <p class="mini">Binary TSV outputs use the diagonal of the inverse tridiagonal Hessian. This accounts for neighbor coupling exactly in the 1D binary solver.</p>
+              <div class="formula">SE_i = sqrt( diag( H^-1 )_i )</div>
+            </div>
+            <div class="card col-6 stack">
+              <h3>How to read it</h3>
+              <p class="mini">Values near 0.5 mean ancestry is effectively unconstrained at that site on the [0,1] scale. That is a warning flag, not a polished confidence interval.</p>
+              <div class="callout">For publication: validate coverage by simulation and report whether 95% intervals contain truth at the expected rate.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Admixture timing</p>
+          <h2>The ACF estimator is useful, but not yet a demographic claim.</h2>
+          <div class="grid">
+            <div class="card col-7 stack">
+              <h3>What it does</h3>
+              <p class="mini">TRACE computes ancestry autocorrelation along cM and fits one- or two-exponential decay. Under ideal pulse admixture, decay rate relates to generations since admixture.</p>
+              <div class="formula">rho(r) ≈ A exp(-g r) + C</div>
+            </div>
+            <div class="card col-5 stack">
+              <h3>What makes it publishable</h3>
+              <p class="mini">Run g=5,10,25,50,100 simulations; use 50-100 replicates; report bias, RMSE, and coverage; compare against ALDER, DATES, or fastGLOBETROTTER where possible.</p>
+            </div>
+          </div>
+          <div class="callout">Current self-check passes: true g=25, weighted estimate=28.5. That is a sanity check, not validation.</div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Production architecture</p>
+          <h2>What TRACE already handles and what still needs engineering.</h2>
+          <div class="grid">
+            <div class="card col-6 stack">
+              <h3>Implemented</h3>
+              <div class="pillrow">
+                <span class="pill">VCF parsing</span>
+                <span class="pill">BAM pileups</span>
+                <span class="pill">Zarr reference panels</span>
+                <span class="pill">chunked optimization</span>
+                <span class="pill">map-gap splitting</span>
+                <span class="pill">phased MSP</span>
+                <span class="pill">grid benchmarks</span>
+              </div>
+            </div>
+            <div class="card col-6 stack">
+              <h3>Next engineering priorities</h3>
+              <p class="mini">Stream chunk construction for huge panels, index-aware VCF windowing everywhere, calibrated uncertainty tests, combined benchmark reports, and comparison-tool integration.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="inner stack">
+          <p class="eyebrow">Roadmap</p>
+          <h2>The clearest path to stronger biological performance.</h2>
+          <div class="grid">
+            <div class="card col-4 stack tight"><h3>1. Tune D and tau</h3><p class="mini">Use the grid-search harness to choose scenario-aware defaults and reveal where structure, not tuning, is limiting.</p></div>
+            <div class="card col-4 stack tight"><h3>2. Add unknown ancestry</h3><p class="mini">Add a ghost state with a prior penalty so unsampled ancestry becomes visible instead of forced into A/B.</p></div>
+            <div class="card col-4 stack tight"><h3>3. Add clinal prior</h3><p class="mini">Use global ancestry or KL regularization for isolation-by-distance and continuous ancestry gradients.</p></div>
+            <div class="card col-6 stack tight"><h3>4. Ancient DNA model</h3><p class="mini">Add deamination-aware errors, missingness weighting, and lower tau defaults for low-coverage data.</p></div>
+            <div class="card col-6 stack tight"><h3>5. Publishable validation</h3><p class="mini">Multi-seed simulations, baseline tools, confidence intervals, and benchmark tables by scenario and SNP density.</p></div>
+          </div>
+          <div class="callout">Bottom line: TRACE is already credible as a tract-like local ancestry solver. Its next leap is adding biological modes for ghost ancestry, clines, and degraded DNA.</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer" id="dots" aria-label="Slide navigation"></footer>
+  </div>
+
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    const dots = document.getElementById('dots');
+    const count = document.getElementById('count');
+    const bar = document.getElementById('bar');
+    let index = 0;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+      dot.addEventListener('click', () => go(i));
+      dots.appendChild(dot);
+    });
+
+    function go(next) {
+      index = Math.max(0, Math.min(slides.length - 1, next));
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+      [...dots.children].forEach((dot, i) => dot.classList.toggle('active', i === index));
+      count.textContent = `${index + 1} / ${slides.length}`;
+      bar.style.width = `${((index + 1) / slides.length) * 100}%`;
+    }
+
+    document.getElementById('prev').addEventListener('click', () => go(index - 1));
+    document.getElementById('next').addEventListener('click', () => go(index + 1));
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') go(index + 1);
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') go(index - 1);
+      if (event.key === 'Home') go(0);
+      if (event.key === 'End') go(slides.length - 1);
+    });
+    go(0);
+
+    const dSlider = document.getElementById('dSlider');
+    const tauSlider = document.getElementById('tauSlider');
+    const dVal = document.getElementById('dVal');
+    const tauVal = document.getElementById('tauVal');
+    const demoText = document.getElementById('demoText');
+    const chart = document.getElementById('demoChart');
+
+    function sliderToD(v) {
+      const x = Number(v) / 100;
+      return Math.pow(10, -4.5 + x * 3.5);
+    }
+
+    function sliderToTau(v) {
+      const x = Number(v) / 100;
+      return 0.2 + x * 2.8;
+    }
+
+    function smoothStep(x, center, width) {
+      return 1 / (1 + Math.exp(-(x - center) / width));
+    }
+
+    function drawDemo() {
+      const D = sliderToD(dSlider.value);
+      const tau = sliderToTau(tauSlider.value);
+      dVal.textContent = D < 0.001 ? D.toExponential(1) : D.toFixed(3);
+      tauVal.textContent = tau.toFixed(2);
+      const smooth = 0.012 + Math.min(0.11, Math.log10(D / 0.00003 + 1) * 0.037);
+      const evidence = Math.min(1.25, Math.max(0.25, tau));
+      const pts = [];
+      for (let i = 0; i <= 140; i++) {
+        const x = i / 140;
+        let y = 0.88 - 0.74 * smoothStep(x, 0.33, smooth) + 0.58 * smoothStep(x, 0.67, smooth * 0.8);
+        y += Math.sin(i * 0.55) * 0.025 * evidence + Math.sin(i * 0.13) * 0.018 * evidence;
+        y = Math.max(0.03, Math.min(0.97, y));
+        pts.push([40 + x * 680, 288 - y * 240]);
+      }
+      const path = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+      const snps = [0.07,0.13,0.18,0.27,0.38,0.44,0.52,0.61,0.72,0.81,0.9].map(x => `<line x1="${40+x*680}" x2="${40+x*680}" y1="38" y2="288" stroke="rgba(23,32,27,0.12)" />`).join('');
+      chart.innerHTML = `
+        <rect x="0" y="0" width="760" height="320" fill="#fbfcfb"/>
+        <line x1="40" x2="720" y1="288" y2="288" stroke="#cbd6d0"/>
+        <line x1="40" x2="40" y1="40" y2="288" stroke="#cbd6d0"/>
+        <text x="44" y="34" font-size="13" fill="#5f6f68">phi_A</text>
+        <text x="682" y="307" font-size="13" fill="#5f6f68">cM</text>
+        ${snps}
+        <rect x="40" y="18" width="210" height="12" rx="4" fill="#2662a6"/>
+        <rect x="250" y="18" width="235" height="12" rx="4" fill="#b6454a"/>
+        <rect x="485" y="18" width="235" height="12" rx="4" fill="#2662a6"/>
+        <path d="${path}" fill="none" stroke="#12372d" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${path}" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      `;
+      if (D > 0.01 && tau < 0.7) {
+        demoText.textContent = 'Very smooth mode: useful for low-confidence data, but can erase true breakpoints.';
+      } else if (D < 0.0002 && tau > 1.5) {
+        demoText.textContent = 'Sharp evidence-driven mode: good for crisp tracts, risky for noisy ancient DNA.';
+      } else if (tau < 0.45) {
+        demoText.textContent = 'Low tau: genotype likelihoods are down-weighted, reducing overreaction to weak sites.';
+      } else {
+        demoText.textContent = 'Balanced mode: useful as a default tract-like local ancestry setting.';
+      }
+    }
+    dSlider.addEventListener('input', drawDemo);
+    tauSlider.addEventListener('input', drawDemo);
+    drawDemo();
+  </script>
+</body>
+</html>
